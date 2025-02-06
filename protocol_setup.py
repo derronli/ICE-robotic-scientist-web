@@ -1,9 +1,8 @@
-from dash import Dash, html, Input, Output, State, ctx
+from dash import Dash, html
 import dash_bootstrap_components as dbc
-import dash_extensions.javascript as js
 
 # Initialize the app
-app = Dash(__name__, external_stylesheets=[dbc.themes.COSMO])
+app = Dash(__name__, external_stylesheets=[dbc.themes.COSMO], assets_ignore='equipment_setup.js')
 
 # Layout
 # app.layout = html.Div([
@@ -49,6 +48,22 @@ app = Dash(__name__, external_stylesheets=[dbc.themes.COSMO])
 #         ),
 #     ], className="main-container"),
 # ], className="app-container")
+
+# navbar = html.Div([
+#     # Header
+#     dbc.Navbar(
+#         dbc.Container([
+#             dbc.NavbarBrand("Untitled Diagram", className="ms-2"),
+#             dbc.Nav([
+#                 dbc.NavItem(dbc.NavLink("File")),
+#                 dbc.NavItem(dbc.NavLink("Edit")),
+#                 dbc.NavItem(dbc.NavLink("View")),
+#             ], navbar=True),
+#         ]),
+#         color="dark",
+#         dark=True,
+#     )
+# ])
 
 app.layout = html.Div()
 

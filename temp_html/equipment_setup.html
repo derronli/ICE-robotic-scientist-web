@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Konva Drag and Drop - Page 2</title>
+    <script src="https://unpkg.com/konva@9.3.0/konva.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        #left-menu, #right-menu {
+            background: #f0f0f0;
+            height: 100vh; /* Full viewport height */
+            width: 250px; /* Slightly wider right menu */
+            position: sticky; /* Make the menus sticky */
+            top: 0; /* Stick to the top of the viewport */
+            transition: width 0.3s;
+            z-index: 10; /* Ensure menus stay above other content */
+        }
+
+        #container {
+            flex: 1;
+            display: flex;
+            justify-content: center; /* Center the matrix horizontally */
+            align-items: center; /* Center the matrix vertically */
+            flex-wrap: wrap; /* Allow wrapping for the matrix */
+        }
+
+        .collapse-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1;
+        }
+
+        .collapsed {
+            width: 50px;
+        }
+
+        .rectangle-info {
+            padding: 10px;
+            font-size: 16px;
+        }
+        
+    </style>
+</head>
+<body>
+    <div id="left-menu">
+        <button class="collapse-button" onclick="toggleLeftMenu()">←</button>
+    </div>
+    <div id="container"></div>
+    <div id="right-menu">
+        <button class="collapse-button" onclick="toggleRightMenu()">→</button>
+        <div class="rectangle-info" id="rectangle-info">
+            Click on a rectangle to see its color.
+        </div>
+    </div>
+
+<script>
+const RECT_WIDTH = 150;
+const RECT_HEIGHT = 100;
+const SNAP_DISTANCE = 60;
+const MATRIX_SIZE = 4; // 4x4 matrix
+
+// Initialize stage and layers
+const stage = new Konva.Stage({
+    container: 'container',
+    width: window.innerWidth - 600,
+    height: window.innerHeight,
+});
+
+const mainLayer = new Konva.Layer();
+const leftMenuStage = new Konva.Stage({
+    container: 'left-menu',
+    width: 400,
+    height: window.innerHeight,
+});
+
+const leftMenuLayer = new Konva.Layer();
+
+// Create a 4x4 matrix of drop zones
+const dropZones = [];
+const totalHeight = MATRIX_SIZE * (RECT_HEIGHT + 40) - 20; // Total height of the matrix
+const startY = (stage.height() - totalHeight) / 2; // Calculate starting Y position to center vertically
+
+for (let row = 0; row < MATRIX_SIZE; row++) {
+    for (let col = 0; col < MATRIX_SIZE; col++) {
+        dropZones.push({
+            x: col * (RECT_WIDTH + 40) + (stage.width() - (MATRIX_SIZE * (RECT_WIDTH + 40))) / 2, // Center horizontally
+            y: startY + row * (RECT_HEIGHT + 40), // Center vertically
+        });
+    }
+}
+// Array to track dropped rectangles
+const droppedRects = new Array(dropZones.length).fill(null);
+
+// Create source rectangles in left menu
+const sourceRects = [
+    { id: 'red', color: 'red' },
+    { id: 'blue', color: 'blue' },
+    { id: 'green', color: 'green' },
+];
+
+// Draw drop zones
+dropZones.forEach((zone, i) => {
+    const dropZone = new Konva.Rect({
+        x: zone.x,
+        y: zone.y,
+        width: RECT_WIDTH,
+        height: RECT_HEIGHT,
+        stroke: '#999',
+        strokeWidth: 2,
+        dash: [5, 5],
+        id: `dropZone-${i}`, // Assign an ID for later reference
+    });
+    mainLayer.add(dropZone);
+});
+
+// Create draggable rectangles in left menu
+sourceRects.forEach((rect, i) => {
+    const rectangle = new Konva.Rect({
+        x: 50, // Center horizontally in the left menu
+        y: 20 + i * 120, // Spacing between rectangles
+        width: RECT_WIDTH,
+        height: RECT_HEIGHT,
+        fill: rect.color,
+        draggable: false, // Prevent dragging the original rectangle
+        id: rect.id,
+    });
+
+    // Listen for mousedown to create a clone
+    rectangle.on('mousedown', function (e) {
+        const pointerPosition = stage.getPointerPosition();
+
+        // Create a new clone at the cursor's position, offset to center the rectangle
+        const clone = new Konva.Rect({
+            x: pointerPosition.x - RECT_WIDTH / 2,
+            y: pointerPosition.y - RECT_HEIGHT / 2,
+            width: RECT_WIDTH,
+            height: RECT_HEIGHT,
+            fill: this.fill(),
+            draggable: true,
+            id: this.id,
+        });
+
+        // Add the clone to the main layer
+        mainLayer.add(clone);
+        clone.moveToTop();
+        clone.startDrag(); // Start dragging the clone immediately
+        setupDragHandlers(clone); // Set up drag-and-drop behavior for the clone
+    });
+
+    leftMenuLayer.add(rectangle);
+});
+
+// Function to handle dragging and dropping
+function setupDragHandlers(rect) {
+    rect.on('dragmove', function () {
+        const pos = this.position();
+        let isSnapping = false;
+
+        // Check if the rectangle is within the snap range of any drop zone
+        for (let i = 0; i < dropZones.length; i++) {
+            const zone = dropZones[i];
+            const distance = Math.sqrt(
+                Math.pow(pos.x - zone.x, 2) + Math.pow(pos.y - zone.y, 2)
+            );
+
+            const dropZone = mainLayer.findOne(`#dropZone-${i}`); // Get the drop zone
+
+            if (distance < SNAP_DISTANCE) {
+                // Highlight the drop zone to indicate snapping
+                dropZone.fill('	rgb(211, 211, 211)'); // Light green fill for snapping
+                dropZone.strokeWidth(4); // Make the border thicker
+                isSnapping = true;
+            } else {
+                // Reset the drop zone style if not snapping
+                dropZone.fill(null); // Reset fill
+                dropZone.stroke('#999'); // Reset stroke color
+                dropZone.strokeWidth(2); // Reset stroke width
+            }
+        }
+
+        mainLayer.batchDraw(); // Redraw the layer to apply changes
+    });
+
+    rect.on('dragend', function () {
+        const pos = this.position();
+        let snapped = false;
+
+        // Find the current index of this rectangle in the droppedRects array
+        const currentIndex = droppedRects.indexOf(this);
+
+        // Check if the rectangle is within the snap range of any drop zone
+        for (let i = 0; i < dropZones.length; i++) {
+            const zone = dropZones[i];
+            const distance = Math.sqrt(
+                Math.pow(pos.x - zone.x, 2) + Math.pow(pos.y - zone.y, 2)
+            );
+
+            if (distance < SNAP_DISTANCE) {
+                // If there's already a rectangle in this drop zone, replace it
+                if (droppedRects[i] && droppedRects[i] !== this) {
+                    droppedRects[i].destroy(); // Remove the existing rectangle
+                }
+
+                // Snap the rectangle to the drop zone
+                this.position({
+                    x: zone.x,
+                    y: zone.y,
+                });
+
+                // Update the droppedRects array
+                if (currentIndex !== -1) {
+                    droppedRects[currentIndex] = null; // Clear the old position
+                }
+                droppedRects[i] = this; // Set the new position
+                snapped = true;
+
+                // Update the right menu with the rectangle's color
+                document.getElementById('rectangle-info').innerText = `Color: ${this.fill()}`;
+                break;
+            }
+        }
+
+        if (!snapped) {
+            // If the rectangle is not snapped to any drop zone, delete it
+            if (currentIndex !== -1) {
+                droppedRects[currentIndex] = null; // Clear the old position
+            }
+            this.destroy();
+        }
+
+        // Reset drop zone styles after dragging ends
+        dropZones.forEach((zone, i) => {
+            const dropZone = mainLayer.findOne(`#dropZone-${i}`);
+            dropZone.fill(null); // Reset fill
+            dropZone.stroke('#999'); // Reset stroke color
+            dropZone.strokeWidth(2); // Reset stroke width
+        });
+
+        mainLayer.batchDraw(); // Redraw the layer to apply changes
+    });
+
+    // Add click event to the rectangle to show its color in the right menu
+    rect.on('click', function () {
+        document.getElementById('rectangle-info').innerText = `Color: ${this.fill()}`;
+    });
+}
+
+// Add layers to stages
+stage.add(mainLayer);
+leftMenuStage.add(leftMenuLayer);
+
+// Menu collapse functionality
+function toggleLeftMenu() {
+    const leftMenu = document.getElementById('left-menu');
+    leftMenu.classList.toggle('collapsed');
+    const button = leftMenu.querySelector('button');
+    button.textContent = leftMenu.classList.contains('collapsed') ? '→' : '←';
+    updateStageSize();
+}
+
+function toggleRightMenu() {
+    const rightMenu = document.getElementById('right-menu');
+    const button = rightMenu.querySelector('button');
+    rightMenu.classList.toggle('collapsed');
+    button.textContent = rightMenu.classList.contains('collapsed') ? '←' : '→';
+
+    // Show or hide the rectangle info based on the menu state
+    const rectangleInfo = document.getElementById('rectangle-info');
+    if (rightMenu.classList.contains('collapsed')) {
+        rectangleInfo.style.display = 'none'; // Hide info
+    } else {
+        rectangleInfo.style.display = 'block'; // Show info
+    }
+
+    updateStageSize();
+}
+
+function updateStageSize() {
+    const leftMenu = document.getElementById('left-menu');
+    const rightMenu = document.getElementById('right-menu');
+    const leftWidth = leftMenu.classList.contains('collapsed') ? 50 : 200;
+    const rightWidth = rightMenu.classList.contains('collapsed') ? 50 : 250; 
+
+    stage.width(window.innerWidth - leftWidth - rightWidth);
+    stage.batchDraw();
+}
+
+// Handle window resize
+window.addEventListener('resize', () => {
+    updateStageSize();
+});
+</script>
+</body>
+</html>

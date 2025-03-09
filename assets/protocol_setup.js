@@ -33,9 +33,9 @@ const droppedRects = new Array(dropZones.length).fill(null);
 
 // Create source rectangles in left menu
 const sourceRects = [
-  { id: "red", color: "red" },
-  { id: "blue", color: "blue" },
-  { id: "green", color: "green" },
+  { id: "pipette", color: "#FF6961", text: "Pipette" },
+  { id: "pick-and-place", color: "#B3EBF2", text: "Pick and Place" },
+  { id: "use-equipment", color: "#80EF80", text: "Use Equipment" },
 ];
 
 // Draw drop zones and arrows
@@ -74,29 +74,49 @@ dropZones.forEach((zone, i) => {
 
 // Create draggable rectangles in left menu
 sourceRects.forEach((rect, i) => {
-  const rectangle = new Konva.Rect({
+  // Create a group to combine the rectangle and text
+  const group = new Konva.Group({
     x: 50, // Center horizontally in the left menu
     y: 20 + i * 100, // Spacing between rectangles
+    draggable: false, // Prevent dragging the original rectangle
+    id: rect.id,
+    name: "source", // Add a name to identify source rectangles
+  });
+
+  // Create the rectangle
+  const rectangle = new Konva.Rect({
     width: RECT_WIDTH,
     height: RECT_HEIGHT,
     fill: rect.color,
-    draggable: false, // Prevent dragging the original rectangle
-    id: rect.id,
+    stroke: "#000",
+    strokeWidth: 1,
   });
 
+  // Create the text
+  const text = new Konva.Text({
+    text: rect.text,
+    fontSize: 14,
+    width: RECT_WIDTH,
+    height: RECT_HEIGHT,
+    align: "center",
+    verticalAlign: "middle",
+    fill: "#000",
+  });
+
+  // Add the rectangle and text to the group
+  group.add(rectangle);
+  group.add(text);
+
   // Listen for mousedown to create a clone
-  rectangle.on("mousedown", function (e) {
+  group.on("mousedown", function (e) {
     const pointerPosition = stage.getPointerPosition();
 
     // Create a new clone at the cursor's position, offset to center the rectangle
-    const clone = new Konva.Rect({
+    const clone = group.clone({
       x: pointerPosition.x - RECT_WIDTH / 2,
       y: pointerPosition.y - RECT_HEIGHT / 2,
-      width: RECT_WIDTH,
-      height: RECT_HEIGHT,
-      fill: this.fill(),
       draggable: true,
-      id: this.id(),
+      name: "clone", // Add a name to identify clones
     });
 
     // Add the clone to the main layer
@@ -106,7 +126,7 @@ sourceRects.forEach((rect, i) => {
     setupDragHandlers(clone); // Set up drag-and-drop behavior for the clone
   });
 
-  leftMenuLayer.add(rectangle);
+  leftMenuLayer.add(group);
 });
 
 // Add button for new position
@@ -190,8 +210,11 @@ addButton.add(
 addButton.on("click", addNewPosition);
 mainLayer.add(addButton);
 
-function setupDragHandlers(rect) {
-  rect.on("dragend", function () {
+function setupDragHandlers(group) {
+  // Remove any existing mousedown listeners to prevent cloning
+  group.off("mousedown");
+
+  group.on("dragend", function () {
     const pos = this.position();
     let snapped = false;
 

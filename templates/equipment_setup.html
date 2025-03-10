@@ -47,6 +47,34 @@
         padding: 10px;
         font-size: 16px;
       }
+
+      .form-container {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 2rem;
+        margin-bottom: 20px;
+      }
+
+      .form-label {
+        font-size: 14px;
+        margin-bottom: 8px;
+        text-align: left;
+      }
+
+      .form-input {
+        width: 120px;
+        padding: 10px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f0f0f0;
+        text-align: center;
+      }
+
+      .form-input:hover {
+        background-color: #ddd;
+      }
     </style>
     {%css%}
   </head>
@@ -61,6 +89,59 @@
       <button class="collapse-button" onclick="toggleRightMenu()">→</button>
       <div class="rectangle-info" id="rectangle-info">
         Click on a rectangle to see its color.
+      <!-- Pipette Block Form Container -->
+      <div id="pipette-form" class="form-container">
+        <!-- "To" Dropdown -->
+        <label class="form-label" for="to-dropdown">To</label>
+        <select id="to-dropdown" class="form-input form-element">
+          <option value="option1">Option 1</option>
+          <option value="option2">Option 2</option>
+          <option value="option3">Option 3</option>
+        </select>
+
+        <!-- "From" Dropdown -->
+        <label class="form-label" for="from-dropdown">From</label>
+        <select id="from-dropdown" class="form-input form-element">
+          <option value="option1">Option 1</option>
+          <option value="option2">Option 2</option>
+          <option value="option3">Option 3</option>
+        </select>
+
+        <!-- "Volume" Number Input -->
+        <label class="form-label" for="volume-input">Volume</label>
+        <input
+          id="volume-input"
+          type="number"
+          class="form-input form-element"
+          placeholder="Enter volume"
+        />
+      </div>
+
+      <!-- Pick and Place Form Container -->
+      <div id="pick-and-place-form" class="form-container">
+        <!-- "To" Dropdown -->
+        <label class="form-label" for="to-dropdown">To</label>
+        <select id="to-dropdown" class="form-input form-element">
+          <option value="option1">Position 1</option>
+          <option value="option2">Position 2</option>
+          <option value="option3">Position 3</option>
+        </select>
+
+        <!-- "From" Dropdown -->
+        <label class="form-label" for="from-dropdown">From</label>
+        <select id="from-dropdown" class="form-input form-element">
+          <option value="option1">Position 1</option>
+          <option value="option2">Position 2</option>
+          <option value="option3">Position 3</option>
+        </select>
+      </div>
+
+      <!-- Use Equipment Form Container -->
+      <div id="use-equipment-form" class="form-container">
+        <label class="form-label" for="placeholder"
+          >Use Equipment Placeholder</label
+        >
+        <input id="placeholder" type="text" class="form-input form-element" />
       </div>
     </div>
     <footer>{%config%} {%scripts%} {%renderer%}</footer>

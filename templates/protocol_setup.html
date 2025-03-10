@@ -1,86 +1,180 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        {%metas%}
-        <title>{%title%}</title>
-        <script src="https://unpkg.com/konva@9.3.0/konva.min.js"></script>
-        {%favicon%}
-        {%css%}
-        <style>
-            body {
-                margin: 0;
-                padding: 0;
-                display: flex;
-            }
+  <head>
+    {%metas%}
+    <title>{%title%}</title>
+    <script src="https://unpkg.com/konva@9.3.0/konva.min.js"></script>
+    {%favicon%} {%css%}
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+      }
 
-            #left-menu, #right-menu {
-                background: #f0f0f0;
-                height: 100vh; /* Full viewport height */
-                width: 200px;
-                position: sticky; /* Make the menus sticky */
-                top: 0; /* Stick to the top of the viewport */
-                transition: width 0.3s;
-                z-index: 10; /* Ensure menus stay above other content */
-            }
+      #left-menu,
+      #right-menu {
+        background: #f0f0f0;
+        height: 100vh; /* Full viewport height */
+        width: 250px;
+        position: sticky; /* Make the menus sticky */
+        top: 0; /* Stick to the top of the viewport */
+        transition: width 0.3s;
+        z-index: 10; /* Ensure menus stay above other content */
+      }
 
-            #container {
-                flex: 1;
-            }
+      #right-menu {
+        width: 300px; /* SIZING: Increased width for the right menu */
+      }
 
-            .collapse-button {
-                position: absolute;
-                top: 10px;
-                right: 10px;
-                z-index: 1;
-            }
+      #container {
+        flex: 1;
+      }
 
-            .collapsed {
-                width: 50px;
-            }
+      .collapse-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+      }
 
-            .menu-buttons {
-                display: flex;
-                flex-direction: column; 
-                align-items: center; 
-                height: 100%; 
-                padding-top: 3rem
-            }
+      .collapsed {
+        width: 50px;
+      }
 
-            #import-button, #export-button {
-                width: 100px;
-                padding: 10px;
-                margin: 10px 0; 
-                font-size: 14px;
-                cursor: pointer;
-                border: 1px solid #ccc;
-                border-radius: 5px;
-                background-color: #f0f0f0;
-                transition: background-color 0.3s;
-            }
+      .menu-buttons {
+        position: absolute; /* Pin to the bottom of the parent container */
+        bottom: 10px; /* Add some spacing from the bottom */
+        left: 0;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
 
-            #import-button:hover, #export-button:hover {
-                background-color: #ddd; 
-            }
-        </style>
-    </head>
-    <body>
-        {%app_entry%}
+      #import-button,
+      #export-button,
+      .form-element {
+        width: 100px;
+        padding: 10px;
+        margin-bottom: 25px;
+        font-size: 14px;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f0f0f0;
+        transition: background-color 0.3s;
+      }
 
-        <div id="left-menu">
-        <button class="collapse-button" onclick="toggleLeftMenu()">←</button>
-        </div>
-        <div id="container"></div>
-        <div id="right-menu">
-            <button class="collapse-button" onclick="toggleRightMenu()">→</button>
-            <div class="menu-buttons" id="menu-buttons">
-                <button id="import-button">Import</button>
-                <button id="export-button">Export</button>
-            </div>
-        </div>
-        <footer>
-            {%config%}
-            {%scripts%}
-            {%renderer%}
-        </footer>
-    </body>
+      #import-button:hover,
+      #export-button:hover,
+      .form-element:hover {
+        background-color: #ddd;
+      }
+
+      .form-container {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 2rem;
+        margin-bottom: 20px;
+      }
+
+      .form-label {
+        font-size: 14px;
+        margin-bottom: 8px;
+        text-align: left;
+      }
+
+      .form-input {
+        width: 120px;
+        padding: 10px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f0f0f0;
+        text-align: center;
+      }
+
+      .form-input:hover {
+        background-color: #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    {%app_entry%}
+
+    <div id="left-menu">
+      <button class="collapse-button" onclick="toggleLeftMenu()">←</button>
+    </div>
+    <div id="container"></div>
+    <div id="right-menu">
+      <button class="collapse-button" onclick="toggleRightMenu()">→</button>
+
+      <!-- Pipette Block Form Container -->
+      <div id="pipette-form" class="form-container">
+        <!-- "To" Dropdown -->
+        <label class="form-label" for="to-dropdown">To</label>
+        <select id="to-dropdown" class="form-input form-element">
+          <option value="option1">Option 1</option>
+          <option value="option2">Option 2</option>
+          <option value="option3">Option 3</option>
+        </select>
+
+        <!-- "From" Dropdown -->
+        <label class="form-label" for="from-dropdown">From</label>
+        <select id="from-dropdown" class="form-input form-element">
+          <option value="option1">Option 1</option>
+          <option value="option2">Option 2</option>
+          <option value="option3">Option 3</option>
+        </select>
+
+        <!-- "Volume" Number Input -->
+        <label class="form-label" for="volume-input">Volume</label>
+        <input
+          id="volume-input"
+          type="number"
+          class="form-input form-element"
+          placeholder="Enter volume"
+        />
+      </div>
+
+      <!-- Pick and Place Form Container -->
+      <div id="pick-and-place-form" class="form-container">
+        <!-- "To" Dropdown -->
+        <label class="form-label" for="to-dropdown">To</label>
+        <select id="to-dropdown" class="form-input form-element">
+          <option value="option1">Position 1</option>
+          <option value="option2">Position 2</option>
+          <option value="option3">Position 3</option>
+        </select>
+
+        <!-- "From" Dropdown -->
+        <label class="form-label" for="from-dropdown">From</label>
+        <select id="from-dropdown" class="form-input form-element">
+          <option value="option1">Position 1</option>
+          <option value="option2">Position 2</option>
+          <option value="option3">Position 3</option>
+        </select>
+      </div>
+
+      <!-- Use Equipment Form Container -->
+      <div id="use-equipment-form" class="form-container">
+        <label class="form-label" for="placeholder"
+          >Use Equipment Placeholder</label
+        >
+        <input id="placeholder" type="text" class="form-input form-element" />
+      </div>
+
+      <!-- Rectangle Info Placeholder -->
+      <div id="rectangle-info"></div>
+
+      <!-- Menu Buttons -->
+      <div class="menu-buttons" id="menu-buttons">
+        <button id="import-button">Import</button>
+        <button id="export-button">Export</button>
+      </div>
+    </div>
+    <footer>{%config%} {%scripts%} {%renderer%}</footer>
+  </body>
 </html>

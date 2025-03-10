@@ -39,9 +39,9 @@ const droppedRects = new Array(dropZones.length).fill(null);
 
 // Create source rectangles in left menu
 const sourceRects = [
-  { id: "red", color: "red" },
-  { id: "blue", color: "blue" },
-  { id: "green", color: "green" },
+  { id: "pipette", color: "#FF6961", text: "96 Well Plate" },
+  { id: "pick-and-place", color: "#B3EBF2", text: "1000 uL Pipette Tip" },
+  { id: "use-equipment", color: "#80EF80", text: "2.5 mL Vial" },
 ];
 
 // Draw drop zones
@@ -61,43 +61,59 @@ dropZones.forEach((zone, i) => {
 
 // Create draggable rectangles in left menu
 sourceRects.forEach((rect, i) => {
-  const rectangle = new Konva.Rect({
+  const group = new Konva.Group({
     x: 50, // Center horizontally in the left menu
     y: 20 + i * 120, // Spacing between rectangles
+    draggable: false, // Prevent dragging the original rectangle
+    id: rect.id,
+    name: "source",
+  });
+
+  const rectangle = new Konva.Rect({
     width: RECT_WIDTH,
     height: RECT_HEIGHT,
     fill: rect.color,
-    draggable: false, // Prevent dragging the original rectangle
-    id: rect.id,
+    stroke: "#000",
+    strokeWidth: 1,
   });
+
+  const text = new Konva.Text({
+    text: rect.text,
+    fontSize: 14,
+    width: RECT_WIDTH,
+    height: RECT_HEIGHT,
+    align: "center",
+    verticalAlign: "middle",
+    fill: "#000",
+  });
+
+  group.add(rectangle);
+  group.add(text);
 
   // Listen for mousedown to create a clone
-  rectangle.on("mousedown", function (e) {
+  group.on("mousedown", function (e) {
     const pointerPosition = stage.getPointerPosition();
 
-    // Create a new clone at the cursor's position, offset to center the rectangle
-    const clone = new Konva.Rect({
+    const clone = group.clone({
       x: pointerPosition.x - RECT_WIDTH / 2,
       y: pointerPosition.y - RECT_HEIGHT / 2,
-      width: RECT_WIDTH,
-      height: RECT_HEIGHT,
-      fill: this.fill(),
       draggable: true,
-      id: this.id,
+      name: "clone",
     });
 
-    // Add the clone to the main layer
     mainLayer.add(clone);
     clone.moveToTop();
-    clone.startDrag(); // Start dragging the clone immediately
-    setupDragHandlers(clone); // Set up drag-and-drop behavior for the clone
+    clone.startDrag();
+    setupDragHandlers(clone);
   });
 
-  leftMenuLayer.add(rectangle);
+  leftMenuLayer.add(group);
 });
 
 // Function to handle dragging and dropping
 function setupDragHandlers(rect) {
+  rect.off("mousedown");
+
   rect.on("dragmove", function () {
     const pos = this.position();
     let isSnapping = false;
@@ -116,6 +132,10 @@ function setupDragHandlers(rect) {
         dropZone.fill("	rgb(211, 211, 211)"); // Light green fill for snapping
         dropZone.strokeWidth(4); // Make the border thicker
         isSnapping = true;
+
+        if (droppedRects[i] && droppedRects[i] !== this) {
+          this.moveToTop();
+        }
       } else {
         // Reset the drop zone style if not snapping
         dropZone.fill(null); // Reset fill
@@ -160,10 +180,6 @@ function setupDragHandlers(rect) {
         droppedRects[i] = this; // Set the new position
         snapped = true;
 
-        // Update the right menu with the rectangle's color
-        document.getElementById(
-          "rectangle-info"
-        ).innerText = `Color: ${this.fill()}`;
         break;
       }
     }
@@ -187,12 +203,30 @@ function setupDragHandlers(rect) {
     mainLayer.batchDraw(); // Redraw the layer to apply changes
   });
 
-  // Add click event to the rectangle to show its color in the right menu
   rect.on("click", function () {
-    document.getElementById(
-      "rectangle-info"
-    ).innerText = `Color: ${this.fill()}`;
+    handleBlockClick(this);
   });
+}
+
+function handleBlockClick(group) {
+  const blockId = group.attrs.id;
+  const pipetteForm = document.getElementById("pipette-form");
+  const pickAndPlaceForm = document.getElementById("pick-and-place-form");
+  const useEquipmentForm = document.getElementById("use-equipment-form");
+
+  if (blockId == "pipette") {
+    pipetteForm.style.display = "flex";
+    pickAndPlaceForm.style.display = "none";
+    useEquipmentForm.style.display = "none";
+  } else if (blockId == "pick-and-place") {
+    pipetteForm.style.display = "none";
+    pickAndPlaceForm.style.display = "flex";
+    useEquipmentForm.style.display = "none";
+  } else if (blockId == "use-equipment") {
+    pipetteForm.style.display = "none";
+    pickAndPlaceForm.style.display = "none";
+    useEquipmentForm.style.display = "flex";
+  }
 }
 
 // Add layers to stages
@@ -235,7 +269,6 @@ function updateStageSize() {
   stage.batchDraw();
 }
 
-// Handle window resize
 window.addEventListener("resize", () => {
   updateStageSize();
 });

@@ -7,7 +7,7 @@ const MAX_POSITIONS = 10; // Or any maximum limit you want to set
 // Initialize stage and layers
 const stage = new Konva.Stage({
   container: "container",
-  width: window.innerWidth - 400,
+  width: window.innerWidth - 500, // SIZING: Adjusted to account for wider right menu
   height: window.innerHeight,
 });
 
@@ -260,11 +260,36 @@ function setupDragHandlers(group) {
 
     mainLayer.batchDraw();
   });
+
+  group.on("click", function () {
+    handleBlockClick(this);
+  });
 }
 
 // Add layers to stages
 stage.add(mainLayer);
 leftMenuStage.add(leftMenuLayer);
+
+function handleBlockClick(group) {
+  const blockId = group.attrs.id;
+  const pipetteForm = document.getElementById("pipette-form");
+  const pickAndPlaceForm = document.getElementById("pick-and-place-form");
+  const useEquipmentForm = document.getElementById("use-equipment-form");
+
+  if (blockId == "pipette") {
+    pipetteForm.style.display = "flex";
+    pickAndPlaceForm.style.display = "none";
+    useEquipmentForm.style.display = "none";
+  } else if (blockId == "pick-and-place") {
+    pipetteForm.style.display = "none";
+    pickAndPlaceForm.style.display = "flex";
+    useEquipmentForm.style.display = "none";
+  } else if (blockId == "use-equipment") {
+    pipetteForm.style.display = "none";
+    pickAndPlaceForm.style.display = "none";
+    useEquipmentForm.style.display = "flex";
+  }
+}
 
 // Menu collapse functionality
 function toggleLeftMenu() {
@@ -290,6 +315,14 @@ function toggleRightMenu() {
     menuButtons.style.display = "flex";
   }
 
+  // Show or hide the rectangle info based on the menu state
+  const rectangleInfo = document.getElementById("rectangle-info");
+  if (rightMenu.classList.contains("collapsed")) {
+    rectangleInfo.style.display = "none"; // Hide info
+  } else {
+    rectangleInfo.style.display = "block"; // Show info
+  }
+
   updateStageSize();
 }
 
@@ -297,7 +330,7 @@ function updateStageSize() {
   const leftMenu = document.getElementById("left-menu");
   const rightMenu = document.getElementById("right-menu");
   const leftWidth = leftMenu.classList.contains("collapsed") ? 50 : 200;
-  const rightWidth = rightMenu.classList.contains("collapsed") ? 50 : 200;
+  const rightWidth = rightMenu.classList.contains("collapsed") ? 50 : 300;
 
   stage.width(window.innerWidth - leftWidth - rightWidth);
 

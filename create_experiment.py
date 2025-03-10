@@ -4,23 +4,28 @@ import dash_bootstrap_components as dbc
 # Initialize the app
 app = Dash(__name__, external_stylesheets=[dbc.themes.COSMO])
 
+NAVBAR_STYLE = {
+    "padding": "1rem",
+}
+
+navbar = html.Div([
+    dbc.Navbar(
+        dbc.Container([
+            dbc.Nav([
+                dbc.NavLink("Dashboard", href="/", active="exact"),
+                dbc.NavLink("Equipment Setup", href="/equipment-setup", active="exact"),
+                dbc.NavLink("Protocol Builder", href="/protocol-builder", active="exact"),
+            ], navbar=True, pills=True, className="flex justify-content-center column-gap-5"),
+        ], className="flex justify-content-center"),
+
+        style=NAVBAR_STYLE
+    ),
+])
+
 # Layout
 app.layout = html.Div([
     # Header
-    dbc.Navbar(
-        dbc.Container([
-            dbc.NavbarBrand("Untitled Diagram", className="ms-2"),
-            dbc.Nav([
-                dbc.NavItem(dbc.NavLink("File")),
-                dbc.NavItem(dbc.NavLink("Edit")),
-                dbc.NavItem(dbc.NavLink("View")),
-            ], navbar=True),
-        ]),
-        color="dark",
-        dark=True,
-    ),
-
-    # WE WANT A SUBMIT BUTTON --> PUBLISHING TO EXTERNAL REPO / etc.
+    navbar,
 
     # Main container
     html.Div([
